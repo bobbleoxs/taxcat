@@ -81,7 +81,7 @@ def run_enhanced_ingest():
     converter = HTMLToDocument()
     cleaner = DocumentCleaner()
     splitter = DocumentSplitter(split_length=150, split_overlap=20)
-    embedder = OpenAIDocumentEmbedder(model="text-embedding-3-small", api_key=Secret.from_value(OPENAI_API_KEY))
+    embedder = OpenAIDocumentEmbedder(model="text-embedding-3-small", api_key=Secret.from_token(OPENAI_API_KEY))
     writer = DocumentWriter(document_store=store)
 
     # 3) Build and run indexing pipeline

@@ -33,7 +33,7 @@ OPENAI_API_KEY = "sk-proj-HH-Rdxod4kgbgon1eP70U2W_0NpbD-SlaTcXCxx0NqQOluiyWJ03yb
 
 store = InMemoryDocumentStore()
 
-embedder = OpenAIDocumentEmbedder(model="text-embedding-3-small", api_key=Secret.from_value(OPENAI_API_KEY))
+embedder = OpenAIDocumentEmbedder(model="text-embedding-3-small", api_key=Secret.from_token(OPENAI_API_KEY))
 writer = DocumentWriter(document_store=store)
 
 files = [
