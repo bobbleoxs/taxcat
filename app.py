@@ -110,7 +110,7 @@ def health_check():
 
 
 # 0) Initialize embedders
-text_embedder = OpenAITextEmbedder(model="text-embedding-3-small")
+text_embedder = OpenAITextEmbedder(model="text-embedding-3-small", api_key=Secret.from_value(OPENAI_API_KEY))
 # We'll need a document embedder if/when we add documents to the store
 # document_embedder = SentenceTransformersDocumentEmbedder(model="sentence-transformers/all-MiniLM-L6-v2")
 
@@ -164,7 +164,7 @@ prompt_builder = ChatPromptBuilder(
     template=prompt_template, required_variables=["query", "documents"]
 )
 generator = OpenAIChatGenerator(
-    model="gpt-4o-mini", api_key=Secret.from_env_var("OPENAI_API_KEY")
+    model="gpt-4o-mini", api_key=Secret.from_value(OPENAI_API_KEY)
 )
 
 # 3) Assemble pipeline

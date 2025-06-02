@@ -9,6 +9,7 @@ from haystack.components.embedders import OpenAIDocumentEmbedder
 from haystack.components.writers import DocumentWriter
 from haystack.dataclasses import Document
 from haystack.document_stores.in_memory import InMemoryDocumentStore
+from haystack.utils import Secret
 
 # INSTRUCTIONS:
 # 1. Download the following HMRC VAT notices as HTML and place them in the data/ directory:
@@ -32,7 +33,7 @@ OPENAI_API_KEY = "sk-proj-HH-Rdxod4kgbgon1eP70U2W_0NpbD-SlaTcXCxx0NqQOluiyWJ03yb
 
 store = InMemoryDocumentStore()
 
-embedder = OpenAIDocumentEmbedder(model="text-embedding-3-small")
+embedder = OpenAIDocumentEmbedder(model="text-embedding-3-small", api_key=Secret.from_value(OPENAI_API_KEY))
 writer = DocumentWriter(document_store=store)
 
 files = [

@@ -14,6 +14,7 @@ from haystack.components.preprocessors import (  # clean & split
 )
 from haystack.components.writers import DocumentWriter  # write to store
 from haystack.document_stores.in_memory import InMemoryDocumentStore  # store
+from haystack.utils import Secret
 
 # INSTRUCTIONS:
 # 1. Download the following HMRC VAT notices as HTML and place them in the data/ directory:
@@ -80,7 +81,7 @@ def run_enhanced_ingest():
     converter = HTMLToDocument()
     cleaner = DocumentCleaner()
     splitter = DocumentSplitter(split_length=150, split_overlap=20)
-    embedder = OpenAIDocumentEmbedder(model="text-embedding-3-small")
+    embedder = OpenAIDocumentEmbedder(model="text-embedding-3-small", api_key=Secret.from_value(OPENAI_API_KEY))
     writer = DocumentWriter(document_store=store)
 
     # 3) Build and run indexing pipeline
