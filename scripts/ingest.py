@@ -29,7 +29,7 @@ if os.getenv("ENVIRONMENT") != "production":
     load_dotenv()
 
 # Hardcoded API key for now
-OPENAI_API_KEY = "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"
+OPENAI_API_KEY = "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"
 
 store = InMemoryDocumentStore()
 
