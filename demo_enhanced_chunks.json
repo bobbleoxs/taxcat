@@ -1,0 +1,148 @@
+{
+  "total_chunks": 6,
+  "enhanced_chunks": [
+    {
+      "id": "chunk_1",
+      "content": "\n            For digital services supplied to business customers in other EU member states, \n            the place of supply is where the customer belongs. The customer will account \n            for VAT through the reverse charge procedure. This means the UK supplier does \n            not charge VAT on the invoice.\n            ",
+      "source": "VAT Notice 741A - Place of supply of services",
+      "metadata": {
+        "transaction_types": [
+          "B2B"
+        ],
+        "geographic_scope": [
+          "EU"
+        ],
+        "service_categories": [
+          "digital"
+        ],
+        "vat_treatments": [
+          "reverse_charge"
+        ],
+        "confidence_score": 1.0
+      },
+      "relevance_score": 2
+    },
+    {
+      "id": "chunk_2",
+      "content": "\n            When you sell goods to consumers in the UK, you must charge the standard rate \n            of VAT at 20%. This applies to most retail sales within the United Kingdom. \n            The consumer pays the VAT as part of the purchase price.\n            ",
+      "source": "VAT Notice 700 - The VAT Guide",
+      "metadata": {
+        "transaction_types": [
+          "B2C"
+        ],
+        "geographic_scope": [
+          "general"
+        ],
+        "service_categories": [
+          "digital",
+          "physical"
+        ],
+        "vat_treatments": [
+          "0%",
+          "20%"
+        ],
+        "confidence_score": 0.9
+      },
+      "relevance_score": 3
+    },
+    {
+      "id": "chunk_3",
+      "content": "\n            Professional services such as consultancy and legal advice supplied to \n            taxable persons are generally subject to the reverse charge when the \n            customer is in another member state. The place of supply is where the \n            customer belongs.\n            ",
+      "source": "VAT Notice 741A - Place of supply of services",
+      "metadata": {
+        "transaction_types": [
+          "B2B"
+        ],
+        "geographic_scope": [
+          "EU"
+        ],
+        "service_categories": [
+          "professional"
+        ],
+        "vat_treatments": [
+          "reverse_charge"
+        ],
+        "confidence_score": 1.0
+      },
+      "relevance_score": 5
+    },
+    {
+      "id": "chunk_4",
+      "content": "\n            Zero-rated supplies include most food, books, and children's clothing. \n            These are taxable supplies but charged at 0% VAT rate. This applies to \n            consumers and businesses alike within the UK.\n            ",
+      "source": "VAT Notice 700 - The VAT Guide",
+      "metadata": {
+        "transaction_types": [
+          "B2C"
+        ],
+        "geographic_scope": [
+          "UK_domestic"
+        ],
+        "service_categories": [
+          "digital",
+          "physical"
+        ],
+        "vat_treatments": [
+          "0%"
+        ],
+        "confidence_score": 1.0
+      },
+      "relevance_score": 5
+    },
+    {
+      "id": "chunk_5",
+      "content": "\n            Software and digital downloads supplied to UK consumers are standard rated \n            at 20%. This includes mobile apps, e-books, and streaming services. The \n            place of supply for digital services to consumers is where the supplier \n            belongs.\n            ",
+      "source": "VAT Notice 741A - Place of supply of services",
+      "metadata": {
+        "transaction_types": [
+          "B2C"
+        ],
+        "geographic_scope": [
+          "general"
+        ],
+        "service_categories": [
+          "digital"
+        ],
+        "vat_treatments": [
+          "0%",
+          "20%"
+        ],
+        "confidence_score": 0.9
+      },
+      "relevance_score": 3
+    },
+    {
+      "id": "chunk_6",
+      "content": "\n            Export of goods to countries outside the UK can be zero-rated provided you \n            obtain and keep valid evidence of export. This applies to shipments to both \n            EU and non-EU countries for goods leaving the UK.\n            ",
+      "source": "VAT Notice 703 - Exports and Removals",
+      "metadata": {
+        "transaction_types": [
+          "general"
+        ],
+        "geographic_scope": [
+          "international"
+        ],
+        "service_categories": [
+          "digital",
+          "physical"
+        ],
+        "vat_treatments": [
+          "0%"
+        ],
+        "confidence_score": 0.9
+      },
+      "relevance_score": 1
+    }
+  ],
+  "metadata_stats": {
+    "total_chunks": 6,
+    "b2b_chunks": 2,
+    "b2c_chunks": 3,
+    "digital_chunks": 5,
+    "professional_chunks": 1,
+    "physical_chunks": 3,
+    "reverse_charge_chunks": 2,
+    "uk_domestic_chunks": 1,
+    "eu_chunks": 2
+  },
+  "demo_timestamp": "2025-01-31"
+}

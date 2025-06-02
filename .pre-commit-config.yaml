@@ -1,0 +1,32 @@
+repos:
+-   repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.8
+    hooks:
+    -   id: ruff
+        args: ["--select=E,F,W,I", "--ignore=E501", "--fix", "."]
+        exclude: ^data/.*\.html$
+    -   id: ruff-format
+        exclude: ^data/.*\.html$
+
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+    -   id: trailing-whitespace
+    -   id: end-of-file-fixer
+    -   id: check-yaml
+    -   id: check-added-large-files
+        args: ['--maxkb=10240']  # 10MB limit
+    -   id: check-ast
+    -   id: check-json
+    -   id: check-merge-conflict
+    -   id: detect-private-key
+    -   id: debug-statements
+
+-   repo: local
+    hooks:
+    -   id: check-env-files
+        name: Check for .env files
+        entry: bash -c 'git diff --cached --name-only | grep -E "\.env$" && exit 1 || exit 0'
+        language: system
+        types: [text]
+        exclude: ^\.env\.example$

@@ -1,0 +1,55 @@
+# Common
+.DS_Store
+.env
+.env.*
+!.env.example
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Next.js
+frontend/node_modules/
+frontend/.next/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# Project specific
+cache/
+*.pkl
+vat_document_store.pkl
+classification_results_summary.json
+
+# Generated files (but keep source HTML)
+vat_documents.json
+vat_documents_enhanced.json
