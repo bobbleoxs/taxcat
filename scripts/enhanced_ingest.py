@@ -72,6 +72,7 @@ def run_enhanced_ingest():
     """Run the enhanced ingestion pipeline with metadata analysis"""
 
     print("🚀 Starting Enhanced VAT Document Ingestion with Metadata Analysis...")
+    print(f"DEBUG: Using OpenAI API Key ending with: {OPENAI_API_KEY[-4:]}")
 
     # 1) Init document store and chunk analyzer
     store = InMemoryDocumentStore()
