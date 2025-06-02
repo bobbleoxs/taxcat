@@ -4,6 +4,7 @@ import os
 from dataclasses import asdict
 
 from chunk_analyzer import VATChunkAnalyzer
+from dotenv import load_dotenv
 from haystack import Pipeline  # pipeline abstraction
 from haystack.components.converters import HTMLToDocument  # html → Document
 from haystack.components.embedders import OpenAIDocumentEmbedder  # embedding
@@ -29,9 +30,15 @@ from haystack.document_stores.in_memory import InMemoryDocumentStore  # store
 #    - B2B digital services from EU to UK = reverse charge (out of scope for supplier)
 #    - Consistent application of place-of-supply rules
 
+# Only load .env file in development
+if os.getenv("ENVIRONMENT") != "production":
+    load_dotenv()
+
 # Remove hardcoded API key
 if not os.getenv("OPENAI_API_KEY"):
-    raise ValueError("OPENAI_API_KEY environment variable is not set")
+    raise ValueError(
+        "OPENAI_API_KEY environment variable is not set. Please set it in your environment variables."
+    )
 
 
 def enhance_document_with_metadata(doc, chunk_analyzer):

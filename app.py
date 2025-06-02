@@ -16,7 +16,9 @@ from haystack.utils import Secret
 from joblib import Memory
 from pydantic import BaseModel
 
-load_dotenv()
+# Only load .env file in development
+if os.getenv("ENVIRONMENT") != "production":
+    load_dotenv()
 
 # Initialize joblib memory cache
 memory = Memory("cache", verbose=0)
@@ -27,7 +29,9 @@ ENVIRONMENT = os.getenv("ENVIRONMENT", "production")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 if not OPENAI_API_KEY:
-    raise ValueError("OPENAI_API_KEY environment variable is not set")
+    raise ValueError(
+        "OPENAI_API_KEY environment variable is not set. Please set it in your environment variables."
+    )
 
 
 class Query(BaseModel):

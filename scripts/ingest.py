@@ -3,6 +3,7 @@ import json
 import os
 
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv
 from haystack import Pipeline
 from haystack.components.embedders import OpenAIDocumentEmbedder
 from haystack.components.writers import DocumentWriter
@@ -22,9 +23,15 @@ from haystack.document_stores.in_memory import InMemoryDocumentStore
 #    - B2B digital services from EU to UK = reverse charge (out of scope for supplier)
 #    - Consistent application of place-of-supply rules
 
+# Only load .env file in development
+if os.getenv("ENVIRONMENT") != "production":
+    load_dotenv()
+
 # Remove hardcoded API key
 if not os.getenv("OPENAI_API_KEY"):
-    raise ValueError("OPENAI_API_KEY environment variable is not set")
+    raise ValueError(
+        "OPENAI_API_KEY environment variable is not set. Please set it in your environment variables."
+    )
 
 store = InMemoryDocumentStore()
 
