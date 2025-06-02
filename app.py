@@ -26,7 +26,7 @@ memory = Memory("cache", verbose=0)
 # Get environment variables
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://taxcat.ai")
 ENVIRONMENT = os.getenv("ENVIRONMENT", "production")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_API_KEY = "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"
 
 if not OPENAI_API_KEY:
     raise ValueError(

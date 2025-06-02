@@ -34,11 +34,8 @@ from haystack.document_stores.in_memory import InMemoryDocumentStore  # store
 if os.getenv("ENVIRONMENT") != "production":
     load_dotenv()
 
-# Remove hardcoded API key
-if not os.getenv("OPENAI_API_KEY"):
-    raise ValueError(
-        "OPENAI_API_KEY environment variable is not set. Please set it in your environment variables."
-    )
+# Hardcoded API key for now
+OPENAI_API_KEY = "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"
 
 
 def enhance_document_with_metadata(doc, chunk_analyzer):
