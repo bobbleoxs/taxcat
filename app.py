@@ -214,12 +214,11 @@ def root():
 
 @app.get("/health")
 def health_check():
+    # Simplified health check for Railway debugging
+    logger.info("Simplified /health endpoint hit!")
     return {
-        "status": "healthy" if pipeline_initialized else "initializing",
-        "service": "TaxCat VAT Classification",
-        "environment": ENVIRONMENT,
-        "pipeline_ready": pipeline_initialized,
-        "documents_in_store": document_store.count_documents() if document_store else 0,
+        "status": "ok_from_simplified_health_check",
+        "message": "Application is running, ignoring pipeline and doc status for this check."
     }
 
 @memory.cache
