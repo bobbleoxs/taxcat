@@ -17,6 +17,7 @@ from haystack.document_stores.in_memory import InMemoryDocumentStore
 from haystack.utils import Secret
 from joblib import Memory
 from pydantic import BaseModel
+from haystack.core.component import component
 
 # Try to import the ingestion script function
 try:
@@ -156,17 +157,20 @@ async def lifespan(app: FastAPI):
                 4) Confidence (low/medium/high)
             """
             prompt_builder = PromptBuilder(template=prompt_template_str)
+            prompt_to_messages = PromptToMessages()
             generator = OpenAIChatGenerator(model="gpt-4o-mini", api_key=Secret.from_token(OPENAI_API_KEY))
 
             pipe = Pipeline()
             pipe.add_component(instance=text_embedder, name="text_embedder")
             pipe.add_component(instance=retriever_component, name="retriever")
             pipe.add_component(instance=prompt_builder, name="prompter")
+            pipe.add_component(instance=prompt_to_messages, name="prompt_to_messages")
             pipe.add_component(instance=generator, name="generator")
 
             pipe.connect("text_embedder.embedding", "retriever.query_embedding")
             pipe.connect("retriever.documents", "prompter.documents")
-            pipe.connect("prompter", "generator")
+            pipe.connect("prompter.prompt", "prompt_to_messages.prompt")
+            pipe.connect("prompt_to_messages.messages", "generator.messages")
             
             pipeline_initialized = True
             logger.info("✅ Haystack RAG pipeline initialized successfully.")
@@ -252,6 +256,11 @@ def classify(q: Query):
     
     response_text = get_classification_from_pipeline(q.text)
     return {"response": response_text, "status": "ok"}
+
+@component
+class PromptToMessages:
+    def run(self, prompt: str):
+        return {"messages": [ChatMessage.from_user(prompt)]}
 
 # Ensure the main execution block is only for direct script running, not when imported by uvicorn.
 if __name__ == "__main__":

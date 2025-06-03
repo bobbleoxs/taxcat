@@ -11,6 +11,7 @@ from haystack.components.retrievers import InMemoryEmbeddingRetriever
 from haystack.dataclasses import ChatMessage, Document
 from haystack.document_stores.in_memory import InMemoryDocumentStore
 from haystack.utils import Secret
+from haystack.core.component import component
 
 # Add scripts directory to path for imports
 sys.path.append("scripts")
@@ -158,6 +159,7 @@ def debug_pipeline(query: str):
         )
     ]
     prompt_builder = PromptBuilder(template=prompt_template[0].content, required_variables=["query", "documents"])
+    prompt_to_messages = PromptToMessages()
     generator = OpenAIChatGenerator(
         model="gpt-4o-mini", api_key=Secret.from_env_var("OPENAI_API_KEY")
     )
@@ -167,12 +169,14 @@ def debug_pipeline(query: str):
     pipe.add_component(instance=text_embedder, name="text_embedder")
     pipe.add_component(instance=retriever, name="retriever")
     pipe.add_component(instance=prompt_builder, name="prompter")
+    pipe.add_component(instance=prompt_to_messages, name="prompt_to_messages")
     pipe.add_component(instance=generator, name="generator")
 
     # Connect components
     pipe.connect("text_embedder.embedding", "retriever.query_embedding")
     pipe.connect("retriever.documents", "prompter.documents")
-    pipe.connect("prompter", "generator")
+    pipe.connect("prompter.prompt", "prompt_to_messages.prompt")
+    pipe.connect("prompt_to_messages.messages", "generator.messages")
 
     # Run pipeline with debug output
     print(f"\n🔍 Debugging query: {query}")
@@ -460,6 +464,13 @@ def debug_rag_pipeline(query1: str, query2: str):
         print("\n" + "✅" * 40)
         print(f"COMPLETED DEBUGGING FOR: '{query}'")
         print("✅" * 40)
+
+
+@component
+def PromptToMessages():
+    def run(self, prompt: str):
+        from haystack.dataclasses import ChatMessage
+        return {"messages": [ChatMessage.from_user(prompt)]}
 
 
 if __name__ == "__main__":

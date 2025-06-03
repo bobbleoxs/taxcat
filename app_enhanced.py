@@ -15,6 +15,7 @@ from haystack.document_stores.in_memory import InMemoryDocumentStore
 from haystack.utils import Secret
 from joblib import Memory
 from pydantic import BaseModel
+from haystack.core.component import component
 
 # Add scripts directory to path for imports
 sys.path.append("scripts")
@@ -301,6 +302,7 @@ prompt_template = [
     )
 ]
 prompt_builder = PromptBuilder(template=prompt_template[0].content)
+prompt_to_messages = PromptToMessages()
 generator = OpenAIChatGenerator(
     model="gpt-4o-mini", api_key=Secret.from_env_var("OPENAI_API_KEY")
 )
@@ -310,12 +312,14 @@ pipe = Pipeline()
 pipe.add_component(instance=text_embedder, name="text_embedder")
 pipe.add_component(instance=retriever, name="retriever")
 pipe.add_component(instance=prompt_builder, name="prompter")
+pipe.add_component(instance=prompt_to_messages, name="prompt_to_messages")
 pipe.add_component(instance=generator, name="generator")
 
 # Connect components
 pipe.connect("text_embedder.embedding", "retriever.query_embedding")
 pipe.connect("retriever.documents", "prompter.documents")
-pipe.connect("prompter", "generator")
+pipe.connect("prompter.prompt", "prompt_to_messages.prompt")
+pipe.connect("prompt_to_messages.messages", "generator.messages")
 
 
 @memory.cache
@@ -405,6 +409,13 @@ def classify_simple(q: Query):
     }
     result = pipe.run(pipeline_input)
     return {"response": result["generator"]["replies"][0].text}
+
+
+@component
+def PromptToMessages():
+    def run(self, prompt: str):
+        from haystack.dataclasses import ChatMessage
+        return {"messages": [ChatMessage.from_user(prompt)]}
 
 
 if __name__ == "__main__":

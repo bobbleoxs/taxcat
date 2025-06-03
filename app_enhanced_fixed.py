@@ -15,6 +15,7 @@ from haystack.document_stores.in_memory import InMemoryDocumentStore
 from haystack.utils import Secret
 from joblib import Memory
 from pydantic import BaseModel
+from haystack.core.component import component
 
 # Add scripts directory to path for imports
 sys.path.append("scripts")
@@ -319,6 +320,12 @@ prompt_template = [
 ]
 
 
+@component
+def PromptToMessages():
+    def run(self, prompt: str):
+        return {"messages": [ChatMessage.from_user(prompt)]}
+
+
 def get_enhanced_classification(text: str, use_classification: bool = True) -> str:
     """Enhanced function to get VAT classification with optional metadata filtering."""
 
@@ -357,6 +364,7 @@ def get_enhanced_classification(text: str, use_classification: bool = True) -> s
         # Create NEW instances of components for this pipeline
         fresh_text_embedder = OpenAITextEmbedder(model="text-embedding-3-small")
         fresh_prompt_builder = PromptBuilder(template=prompt_template[0].content, required_variables=["query", "documents"])
+        fresh_prompt_to_messages = PromptToMessages()
         fresh_generator = OpenAIChatGenerator(
             model="gpt-4o-mini", api_key=Secret.from_env_var("OPENAI_API_KEY")
         )
@@ -366,12 +374,14 @@ def get_enhanced_classification(text: str, use_classification: bool = True) -> s
         pipe.add_component(instance=fresh_text_embedder, name="text_embedder")
         pipe.add_component(instance=filtered_retriever, name="retriever")
         pipe.add_component(instance=fresh_prompt_builder, name="prompter")
+        pipe.add_component(instance=fresh_prompt_to_messages, name="prompt_to_messages")
         pipe.add_component(instance=fresh_generator, name="generator")
 
         # Connect components
         pipe.connect("text_embedder.embedding", "retriever.query_embedding")
         pipe.connect("retriever.documents", "prompter.documents")
-        pipe.connect("prompter", "generator")
+        pipe.connect("prompter.prompt", "prompt_to_messages.prompt")
+        pipe.connect("prompt_to_messages.messages", "generator.messages")
 
         # Run pipeline with enhanced retrieval for filtered results
         top_k = 10 if use_classification else 5
@@ -476,6 +486,7 @@ def classify_simple(q: Query):
         # Create NEW instances of components for simple pipeline
         simple_text_embedder = OpenAITextEmbedder(model="text-embedding-3-small")
         simple_prompt_builder = PromptBuilder(template=prompt_template[0].content, required_variables=["query", "documents"])
+        simple_prompt_to_messages = PromptToMessages()
         simple_generator = OpenAIChatGenerator(
             model="gpt-4o-mini", api_key=Secret.from_env_var("OPENAI_API_KEY")
         )
@@ -486,11 +497,13 @@ def classify_simple(q: Query):
         pipe.add_component(instance=simple_text_embedder, name="text_embedder")
         pipe.add_component(instance=simple_retriever, name="retriever")
         pipe.add_component(instance=simple_prompt_builder, name="prompter")
+        pipe.add_component(instance=simple_prompt_to_messages, name="prompt_to_messages")
         pipe.add_component(instance=simple_generator, name="generator")
 
         pipe.connect("text_embedder.embedding", "retriever.query_embedding")
         pipe.connect("retriever.documents", "prompter.documents")
-        pipe.connect("prompter", "generator")
+        pipe.connect("prompter.prompt", "prompt_to_messages.prompt")
+        pipe.connect("prompt_to_messages.messages", "generator.messages")
 
         pipeline_input = {
             "text_embedder": {"text": q.text},
