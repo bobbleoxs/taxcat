@@ -258,7 +258,7 @@ def get_classification_from_pipeline(text: str) -> str:
         }
         logger.info(f"Running RAG pipeline with input: {text[:50]}...")
         result = pipe.run(pipeline_input)
-        response_text = result["generator"]["replies"][0].text
+        response_text = result["generator"]["replies"][0].content
         logger.info(f"RAG pipeline generated response: {response_text[:100]}...")
         return response_text
     except Exception as e:
