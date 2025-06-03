@@ -356,9 +356,7 @@ def get_enhanced_classification(text: str, use_classification: bool = True) -> s
 
         # Create NEW instances of components for this pipeline
         fresh_text_embedder = OpenAITextEmbedder(model="text-embedding-3-small")
-        fresh_prompt_builder = PromptBuilder(
-            template=prompt_template, required_variables=["query", "documents"]
-        )
+        fresh_prompt_builder = PromptBuilder(template=prompt_template[0].content, required_variables=["query", "documents"])
         fresh_generator = OpenAIChatGenerator(
             model="gpt-4o-mini", api_key=Secret.from_env_var("OPENAI_API_KEY")
         )
@@ -477,9 +475,7 @@ def classify_simple(q: Query):
     try:
         # Create NEW instances of components for simple pipeline
         simple_text_embedder = OpenAITextEmbedder(model="text-embedding-3-small")
-        simple_prompt_builder = PromptBuilder(
-            template=prompt_template, required_variables=["query", "documents"]
-        )
+        simple_prompt_builder = PromptBuilder(template=prompt_template[0].content, required_variables=["query", "documents"])
         simple_generator = OpenAIChatGenerator(
             model="gpt-4o-mini", api_key=Secret.from_env_var("OPENAI_API_KEY")
         )

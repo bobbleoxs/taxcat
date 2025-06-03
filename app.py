@@ -155,7 +155,7 @@ async def lifespan(app: FastAPI):
                 3) Source URL (if identified from the documents, otherwise N/A)
                 4) Confidence (low/medium/high)
             """
-            prompt_builder = PromptBuilder(template=[ChatMessage.from_user(prompt_template_str)])
+            prompt_builder = PromptBuilder(template=prompt_template_str)
             generator = OpenAIChatGenerator(model="gpt-4o-mini", api_key=Secret.from_token(OPENAI_API_KEY))
 
             pipe = Pipeline()

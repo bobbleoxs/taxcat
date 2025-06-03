@@ -157,9 +157,7 @@ def debug_pipeline(query: str):
         """
         )
     ]
-    prompt_builder = PromptBuilder(
-        template=prompt_template, required_variables=["query", "documents"]
-    )
+    prompt_builder = PromptBuilder(template=prompt_template[0].content, required_variables=["query", "documents"])
     generator = OpenAIChatGenerator(
         model="gpt-4o-mini", api_key=Secret.from_env_var("OPENAI_API_KEY")
     )
