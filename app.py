@@ -18,7 +18,7 @@ except ImportError as e:
     process_and_embed_documents = None
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from haystack import Pipeline
 from haystack.components.builders import PromptBuilder
@@ -46,9 +46,11 @@ if os.getenv("ENVIRONMENT") != "production":
 # Initialize joblib memory cache
 memory = Memory("cache", verbose=0)
 
-# API Key: Using the hardcoded key as per previous discussions for Railway deployment.
-# Ensure this key is active and has sufficient quota.
-OPENAI_API_KEY = "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"
+# Get API key from environment variable
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+if not OPENAI_API_KEY:
+    logger.error("CRITICAL: OPENAI_API_KEY environment variable is not set")
+    raise ValueError("OPENAI_API_KEY environment variable is required")
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://taxcat.ai")
 ENVIRONMENT = os.getenv("ENVIRONMENT", "production")
@@ -100,87 +102,102 @@ async def lifespan(app: FastAPI):
     if not OPENAI_API_KEY:
         logger.error("CRITICAL: OPENAI_API_KEY is not configured. VAT classification will not work.")
         pipeline_initialized = False
-    else:
-        logger.info(f"OpenAI API Key loaded, last 4 chars: ...{OPENAI_API_KEY[-4:]}")
-        
-        # Initialize Document Store
-        document_store = InMemoryDocumentStore()
+        yield
+        return
 
-        # First try to load existing documents
-        documents_loaded = load_documents_from_json_to_store(document_store, DOCUMENTS_FILE_PATH)
-        
-        # If loading failed, try to run the ingestion process
-        if not documents_loaded and process_and_embed_documents:
-            logger.info("🏃 Running document ingestion and embedding process...")
-            enhanced_docs, stats = process_and_embed_documents()
-            if enhanced_docs is not None:
-                logger.info("✅ Document ingestion and embedding process completed successfully.")
-                # Try loading the newly generated documents
-                documents_loaded = load_documents_from_json_to_store(document_store, DOCUMENTS_FILE_PATH)
-            else:
-                logger.error("❌ Document ingestion and embedding process failed.")
-        
-        if document_store.count_documents() > 0:
-            logger.info(f"📚 Document store populated with {document_store.count_documents()} documents.")
+    try:
+        # Test the API key with a simple request
+        test_embedder = OpenAITextEmbedder(model="text-embedding-3-small", api_key=Secret.from_token(OPENAI_API_KEY))
+        test_embedder.run(text="test")
+        logger.info("✅ OpenAI API key validated successfully")
+    except Exception as e:
+        logger.error(f"❌ OpenAI API key validation failed: {e}")
+        pipeline_initialized = False
+        yield
+        return
+
+    logger.info(f"OpenAI API Key loaded, last 4 chars: ...{OPENAI_API_KEY[-4:]}")
+    
+    # Initialize Document Store
+    document_store = InMemoryDocumentStore()
+
+    # First try to load existing documents
+    documents_loaded = load_documents_from_json_to_store(document_store, DOCUMENTS_FILE_PATH)
+    
+    # If loading failed, try to run the ingestion process
+    if not documents_loaded and process_and_embed_documents:
+        logger.info("🏃 Running document ingestion and embedding process...")
+        enhanced_docs, stats = process_and_embed_documents()
+        if enhanced_docs is not None:
+            logger.info("✅ Document ingestion and embedding process completed successfully.")
+            # Try loading the newly generated documents
+            documents_loaded = load_documents_from_json_to_store(document_store, DOCUMENTS_FILE_PATH)
         else:
-            logger.error("❌ Document store is empty. VAT classification will not work properly.")
-            pipeline_initialized = False
-            yield
-            return
+            logger.error("❌ Document ingestion and embedding process failed.")
+    
+    if document_store.count_documents() > 0:
+        logger.info(f"📚 Document store populated with {document_store.count_documents()} documents.")
+    else:
+        logger.error("❌ Document store is empty. VAT classification will not work properly.")
+        pipeline_initialized = False
+        yield
+        return
 
-        # Initialize Haystack RAG Pipeline components
-        try:
-            logger.info("⚙️ Initializing Haystack RAG pipeline components...")
-            text_embedder = OpenAITextEmbedder(model="text-embedding-3-small", api_key=Secret.from_token(OPENAI_API_KEY))
-            retriever_component = InMemoryEmbeddingRetriever(document_store=document_store)
-            
-            prompt_template_str = """
-                You are an expert in UK VAT.
-                Context from retrieved documents:
-                {% for doc in documents %}
-                  Document Content: {{ doc.content }}
-                  {% if doc.meta and doc.meta.get('url') %}
-                  Source URL: {{ doc.meta.get('url') }}
-                  {% endif %}
-                  ---
-                {% endfor %}
-                When classifying transactions, pay special attention to:
-                - Post-Brexit rules for cross-border and digital services
-                - Place-of-supply rules (especially for services and digital products)
-                - B2B digital services from the EU to the UK: these are typically subject to the reverse charge (out of scope for the supplier, customer accounts for VAT)
-                - Domestic reverse charge rules for construction and other relevant sectors
-                - Always provide consistent and correct answers for cross-border, digital, and reverse charge scenarios, referencing HMRC VAT Notice 741A and 735 where relevant
-                Based on the context above and your expertise, analyze the following transaction.
-                Transaction: {{query}}
-                Provide the following:
-                1) VAT Rate (e.g., 20%, 5%, 0%, exempt, out_of_scope, needs_review)
-                2) Short Rationale
-                3) Source URL (if identified from the documents, otherwise N/A)
-                4) Confidence (low/medium/high)
-            """
-            prompt_builder = PromptBuilder(template=prompt_template_str)
-            prompt_to_messages = PromptToMessages()
-            generator = OpenAIChatGenerator(model="gpt-4o-mini", api_key=Secret.from_token(OPENAI_API_KEY))
+    # Initialize Haystack RAG Pipeline components
+    try:
+        logger.info("⚙️ Initializing Haystack RAG pipeline components...")
+        text_embedder = OpenAITextEmbedder(model="text-embedding-3-small", api_key=Secret.from_token(OPENAI_API_KEY))
+        retriever_component = InMemoryEmbeddingRetriever(document_store=document_store)
+        
+        prompt_template_str = """
+            You are an expert in UK VAT.
+            Context from retrieved documents:
+            {% for doc in documents %}
+              Document Content: {{ doc.content }}
+              {% if doc.meta and doc.meta.get('url') %}
+              Source URL: {{ doc.meta.get('url') }}
+              {% endif %}
+              ---
+            {% endfor %}
+            When classifying transactions, pay special attention to:
+            - Post-Brexit rules for cross-border and digital services
+            - Place-of-supply rules (especially for services and digital products)
+            - B2B digital services from the EU to the UK: these are typically subject to the reverse charge (out of scope for the supplier, customer accounts for VAT)
+            - Domestic reverse charge rules for construction and other relevant sectors
+            - Always provide consistent and correct answers for cross-border, digital, and reverse charge scenarios, referencing HMRC VAT Notice 741A and 735 where relevant
+            Based on the context above and your expertise, analyze the following transaction.
+            Transaction: {{query}}
+            Provide the following:
+            1) VAT Rate (e.g., 20%, 5%, 0%, exempt, out_of_scope, needs_review)
+            2) Short Rationale
+            3) Source URL (if identified from the documents, otherwise N/A)
+            4) Confidence (low/medium/high)
+        """
+        prompt_builder = PromptBuilder(template=prompt_template_str)
+        prompt_to_messages = PromptToMessages()
+        generator = OpenAIChatGenerator(model="gpt-4", api_key=Secret.from_token(OPENAI_API_KEY))
 
-            pipe = Pipeline()
-            pipe.add_component(instance=text_embedder, name="text_embedder")
-            pipe.add_component(instance=retriever_component, name="retriever")
-            pipe.add_component(instance=prompt_builder, name="prompter")
-            pipe.add_component(instance=prompt_to_messages, name="prompt_to_messages")
-            pipe.add_component(instance=generator, name="generator")
+        pipe = Pipeline()
+        pipe.add_component(instance=text_embedder, name="text_embedder")
+        pipe.add_component(instance=retriever_component, name="retriever")
+        pipe.add_component(instance=prompt_builder, name="prompter")
+        pipe.add_component(instance=prompt_to_messages, name="prompt_to_messages")
+        pipe.add_component(instance=generator, name="generator")
 
-            pipe.connect("text_embedder.embedding", "retriever.query_embedding")
-            pipe.connect("retriever.documents", "prompter.documents")
-            pipe.connect("prompter.prompt", "prompt_to_messages.prompt")
-            pipe.connect("prompt_to_messages.messages", "generator.messages")
-            
-            pipeline_initialized = True
-            logger.info("✅ Haystack RAG pipeline initialized successfully.")
-        except Exception as e:
-            logger.error(f"❌ Failed to initialize Haystack RAG pipeline: {e}", exc_info=True)
-            pipeline_initialized = False # Ensure it's marked as not ready
+        pipe.connect("text_embedder.embedding", "retriever.query_embedding")
+        pipe.connect("retriever.documents", "prompter.documents")
+        pipe.connect("prompter.prompt", "prompt_to_messages.prompt")
+        pipe.connect("prompt_to_messages.messages", "generator.messages")
+        
+        pipeline_initialized = True
+        logger.info("✅ Haystack RAG pipeline initialized successfully.")
+    except Exception as e:
+        logger.error(f"❌ Failed to initialize Haystack RAG pipeline: {e}", exc_info=True)
+        pipeline_initialized = False
+        yield
+        return
 
-    yield # FastAPI runs the app after this yield
+    yield
 
     logger.info("💧 FastAPI application shutdown...")
     # Clean up resources if needed (e.g., close database connections)
@@ -252,14 +269,18 @@ def get_classification_from_pipeline(text: str) -> str:
 def classify(q: Query):
     if not pipeline_initialized:
         logger.warning("Classification attempt while pipeline is not ready.")
-        return {"response": "The VAT classification system is initializing. Please try again in a moment.", "status": "initializing"}
+        raise HTTPException(status_code=503, detail="The VAT classification system is initializing. Please try again in a moment.")
+    
     if document_store and document_store.count_documents() == 0:
         logger.warning("Classification attempt but no documents are in the store.")
-        # Consider a more specific fallback if no documents are a permanent state vs. temporary
-        return {"response": "The document store is currently empty. Classification may be impaired or based on general knowledge only.", "status": "no_documents"}
+        raise HTTPException(status_code=503, detail="The document store is currently empty. Classification may be impaired or based on general knowledge only.")
     
-    response_text = get_classification_from_pipeline(q.text)
-    return {"response": response_text, "status": "ok"}
+    try:
+        response_text = get_classification_from_pipeline(q.text)
+        return {"response": response_text, "status": "ok"}
+    except Exception as e:
+        logger.error(f"Error during classification: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="An error occurred while classifying the transaction. Please try again later.")
 
 @component
 class PromptToMessages:
