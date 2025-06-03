@@ -321,7 +321,7 @@ prompt_template = [
 
 
 @component
-def PromptToMessages():
+class PromptToMessages:
     def run(self, prompt: str):
         return {"messages": [ChatMessage.from_user(prompt)]}
 

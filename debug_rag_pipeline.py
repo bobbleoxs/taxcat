@@ -467,9 +467,8 @@ def debug_rag_pipeline(query1: str, query2: str):
 
 
 @component
-def PromptToMessages():
+class PromptToMessages:
     def run(self, prompt: str):
-        from haystack.dataclasses import ChatMessage
         return {"messages": [ChatMessage.from_user(prompt)]}
 
 
