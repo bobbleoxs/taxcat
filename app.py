@@ -5,6 +5,18 @@ import logging # Import logging
 from contextlib import asynccontextmanager # For FastAPI lifespan
 from typing import Dict, List
 
+# Setup basic logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Try to import the ingestion script function
+try:
+    from scripts.enhanced_ingest import process_and_embed_documents
+    logger.info("Successfully imported process_and_embed_documents from scripts.enhanced_ingest")
+except ImportError as e:
+    logger.error(f"Failed to import process_and_embed_documents: {e}", exc_info=True)
+    process_and_embed_documents = None
+
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,17 +31,6 @@ from haystack.utils import Secret
 from joblib import Memory
 from pydantic import BaseModel
 from haystack.core.component import component
-
-# Try to import the ingestion script function
-try:
-    from scripts.enhanced_ingest import process_and_embed_documents
-except ImportError:
-    process_and_embed_documents = None
-    logging.warning("Could not import process_and_embed_documents from scripts.enhanced_ingest")
-
-# Setup basic logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 # Global variable to hold the document store and retriever
 # This will be initialized during app startup via lifespan management
@@ -61,23 +62,23 @@ def load_documents_from_json_to_store(store: InMemoryDocumentStore, json_file=DO
     """Load documents from JSON file into the provided DocumentStore."""
     logger.info(f"📂 Attempting to load documents from {json_file}...")
     if not os.path.exists(json_file):
-        logger.warning(f"❌ Document file {json_file} not found. No documents loaded into store.")
+        logger.warning(f"❌ Document file {json_file} not found. Will attempt to generate it.")
         return False
 
     try:
         with open(json_file, "r", encoding="utf-8") as f:
             documents_data = json.load(f)
         if not documents_data:
-            logger.warning(f"⚠️ No data found in {json_file}. No documents loaded.")
+            logger.warning(f"⚠️ No data found in {json_file}. Will attempt to generate it.")
             return False
 
         documents_to_write = []
         for doc_data in documents_data:
             doc = Document(
-                id=doc_data.get("id"), # Allow Haystack to generate ID if missing
+                id=doc_data.get("id"),
                 content=doc_data["content"],
                 meta=doc_data.get("meta", {}),
-                embedding=doc_data.get("embedding") # Will be None if not pre-embedded
+                embedding=doc_data.get("embedding")
             )
             documents_to_write.append(doc)
 
@@ -85,7 +86,7 @@ def load_documents_from_json_to_store(store: InMemoryDocumentStore, json_file=DO
         logger.info(f"✅ Loaded and wrote {len(documents_to_write)} documents to the store from {json_file}")
         return True
     except json.JSONDecodeError:
-        logger.error(f"❌ Error: Invalid JSON in {json_file}. Could not load documents.")
+        logger.error(f"❌ Error: Invalid JSON in {json_file}. Will attempt to regenerate it.")
         return False
     except Exception as e:
         logger.error(f"❌ An unexpected error occurred while loading documents from {json_file}: {e}", exc_info=True)
@@ -98,34 +99,34 @@ async def lifespan(app: FastAPI):
 
     if not OPENAI_API_KEY:
         logger.error("CRITICAL: OPENAI_API_KEY is not configured. VAT classification will not work.")
-        # Keep pipeline_initialized as False
+        pipeline_initialized = False
     else:
         logger.info(f"OpenAI API Key loaded, last 4 chars: ...{OPENAI_API_KEY[-4:]}")
         
         # Initialize Document Store
         document_store = InMemoryDocumentStore()
 
-        # Attempt to run ingestion script first
-        ingestion_successful = False
-        if process_and_embed_documents:
+        # First try to load existing documents
+        documents_loaded = load_documents_from_json_to_store(document_store, DOCUMENTS_FILE_PATH)
+        
+        # If loading failed, try to run the ingestion process
+        if not documents_loaded and process_and_embed_documents:
             logger.info("🏃 Running document ingestion and embedding process...")
-            enhanced_docs, stats = process_and_embed_documents() # This function now handles its own errors
+            enhanced_docs, stats = process_and_embed_documents()
             if enhanced_docs is not None:
                 logger.info("✅ Document ingestion and embedding process completed successfully.")
-                # Ingestion script saves to DOCUMENTS_FILE_PATH, so we load from there
-                ingestion_successful = True
+                # Try loading the newly generated documents
+                documents_loaded = load_documents_from_json_to_store(document_store, DOCUMENTS_FILE_PATH)
             else:
                 logger.error("❌ Document ingestion and embedding process failed.")
-        else:
-            logger.warning("Ingestion script (process_and_embed_documents) not available.")
-
-        # Load documents into the store (either freshly ingested or pre-existing)
-        documents_loaded_to_store = load_documents_from_json_to_store(document_store, DOCUMENTS_FILE_PATH)
         
         if document_store.count_documents() > 0:
             logger.info(f"📚 Document store populated with {document_store.count_documents()} documents.")
         else:
-            logger.warning("⚠️ Document store is empty. VAT classification may not work or will be impaired.")
+            logger.error("❌ Document store is empty. VAT classification will not work properly.")
+            pipeline_initialized = False
+            yield
+            return
 
         # Initialize Haystack RAG Pipeline components
         try:
