@@ -261,7 +261,10 @@ def classify(q: Query):
 @component
 class PromptToMessages:
     def run(self, prompt: str) -> Dict[str, List[ChatMessage]]:
-        return {"messages": [ChatMessage.from_user(prompt)]}
+        print("PromptToMessages.run CALLED with:", prompt)
+        result = {"messages": [ChatMessage.from_user(prompt)]}
+        print("PromptToMessages.run RETURNING:", result)
+        return result
 
 # Ensure the main execution block is only for direct script running, not when imported by uvicorn.
 if __name__ == "__main__":
