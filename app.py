@@ -175,7 +175,7 @@ async def lifespan(app: FastAPI):
         """
         prompt_builder = PromptBuilder(template=prompt_template_str)
         prompt_to_messages = PromptToMessages()
-        generator = OpenAIChatGenerator(model="gpt-4", api_key=Secret.from_token(OPENAI_API_KEY))
+        generator = OpenAIChatGenerator(model="gpt-4o-mini", api_key=Secret.from_token(OPENAI_API_KEY))
 
         pipe = Pipeline()
         pipe.add_component(instance=text_embedder, name="text_embedder")
