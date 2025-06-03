@@ -5,7 +5,7 @@ import os
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from haystack import Pipeline
-from haystack.components.embedders import OpenAIDocumentEmbedder
+from haystack.components.embedders import OpenAITextEmbedder
 from haystack.components.writers import DocumentWriter
 from haystack.dataclasses import Document
 from haystack.document_stores.in_memory import InMemoryDocumentStore
@@ -33,7 +33,7 @@ OPENAI_API_KEY = "sk-proj-SIQ3O1E8QO3gAgHodze66_d3SzgF14kXIMXFEsv1s3nGURc4pCSKgt
 
 store = InMemoryDocumentStore()
 
-embedder = OpenAIDocumentEmbedder(model="text-embedding-3-small", api_key=Secret.from_token(OPENAI_API_KEY))
+embedder = OpenAITextEmbedder(model="text-embedding-3-small", api_key=Secret.from_token(OPENAI_API_KEY))
 writer = DocumentWriter(document_store=store)
 
 files = [

@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from haystack import Pipeline
-from haystack.components.builders import ChatPromptBuilder
+from haystack.components.builders import PromptBuilder
 from haystack.components.embedders import OpenAITextEmbedder
 from haystack.components.generators.chat import OpenAIChatGenerator
 from haystack.components.retrievers import InMemoryEmbeddingRetriever
@@ -300,7 +300,7 @@ prompt_template = [
     """
     )
 ]
-prompt_builder = ChatPromptBuilder(
+prompt_builder = PromptBuilder(
     template=prompt_template, required_variables=["query", "documents"]
 )
 generator = OpenAIChatGenerator(

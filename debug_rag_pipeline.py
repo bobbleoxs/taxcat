@@ -4,7 +4,7 @@ import sys
 from typing import Dict, List
 
 from haystack import Pipeline
-from haystack.components.builders import ChatPromptBuilder
+from haystack.components.builders import PromptBuilder
 from haystack.components.embedders import OpenAITextEmbedder
 from haystack.components.generators.chat import OpenAIChatGenerator
 from haystack.components.retrievers import InMemoryEmbeddingRetriever
@@ -157,7 +157,7 @@ def debug_pipeline(query: str):
         """
         )
     ]
-    prompt_builder = ChatPromptBuilder(
+    prompt_builder = PromptBuilder(
         template=prompt_template, required_variables=["query", "documents"]
     )
     generator = OpenAIChatGenerator(
