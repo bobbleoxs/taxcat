@@ -196,7 +196,10 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL], # Or use ["*"] for local dev if issues persist
+    allow_origins=[
+        FRONTEND_URL, 
+        f"https://www.{FRONTEND_URL.split('//')[-1]}" # Dynamically add www if base is taxcat.ai
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
