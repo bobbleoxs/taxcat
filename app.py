@@ -260,6 +260,7 @@ def classify(q: Query):
 
 @component
 class PromptToMessages:
+    @component.output_types(messages=List[ChatMessage])
     def run(self, prompt: str) -> Dict[str, List[ChatMessage]]:
         print("PromptToMessages.run CALLED with:", prompt)
         result = {"messages": [ChatMessage.from_user(prompt)]}
