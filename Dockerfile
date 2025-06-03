@@ -44,4 +44,6 @@ COPY . .
 # # Use shell form for CMD to allow environment variable substitution for $PORT
 # CMD ["/start.sh"]
 
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+EXPOSE 8000
+
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "debug"]
