@@ -31,15 +31,17 @@ RUN pip install --no-cache-dir -r requirements.txt
 # This includes your FastAPI app, scripts, and the data directory
 COPY . .
 
-# Add the startup script
-COPY start.sh /start.sh
-RUN chmod +x /start.sh
+# # Add the startup script
+# COPY start.sh /start.sh
+# RUN chmod +x /start.sh
 
-# Ensure the cache directory for joblib exists and is writable if needed by your app
-# RUN mkdir -p cache && chmod -R 777 cache
+# # Ensure the cache directory for joblib exists and is writable if needed by your app
+# # RUN mkdir -p cache && chmod -R 777 cache
 
-# The command to run your application (FastAPI with Uvicorn)
-# Railway will inject the PORT environment variable.
-# Uvicorn will bind to 0.0.0.0 to be accessible from outside the container.
-# Use shell form for CMD to allow environment variable substitution for $PORT
-CMD ["/start.sh"]
+# # The command to run your application (FastAPI with Uvicorn)
+# # Railway will inject the PORT environment variable.
+# # Uvicorn will bind to 0.0.0.0 to be accessible from outside the container.
+# # Use shell form for CMD to allow environment variable substitution for $PORT
+# CMD ["/start.sh"]
+
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
