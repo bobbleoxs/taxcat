@@ -51,5 +51,5 @@ vat_document_store.pkl
 classification_results_summary.json
 
 # Generated files (but keep source HTML)
-vat_documents.json
-vat_documents_enhanced.json
+# vat_documents.json
+# vat_documents_enhanced.json
