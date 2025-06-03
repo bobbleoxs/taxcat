@@ -3,6 +3,7 @@ import json
 import os
 import logging # Import logging
 from contextlib import asynccontextmanager # For FastAPI lifespan
+from typing import Dict, List
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -259,7 +260,7 @@ def classify(q: Query):
 
 @component
 class PromptToMessages:
-    def run(self, prompt: str):
+    def run(self, prompt: str) -> Dict[str, List[ChatMessage]]:
         return {"messages": [ChatMessage.from_user(prompt)]}
 
 # Ensure the main execution block is only for direct script running, not when imported by uvicorn.

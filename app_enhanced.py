@@ -1,6 +1,7 @@
 # app_enhanced.py
 import json
 import sys
+from typing import Dict, List
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -405,7 +406,7 @@ def classify_simple(q: Query):
 
 @component
 class PromptToMessages:
-    def run(self, prompt: str):
+    def run(self, prompt: str) -> Dict[str, List[ChatMessage]]:
         return {"messages": [ChatMessage.from_user(prompt)]}
 
 

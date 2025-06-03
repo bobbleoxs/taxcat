@@ -468,7 +468,7 @@ def debug_rag_pipeline(query1: str, query2: str):
 
 @component
 class PromptToMessages:
-    def run(self, prompt: str):
+    def run(self, prompt: str) -> Dict[str, List[ChatMessage]]:
         return {"messages": [ChatMessage.from_user(prompt)]}
 
 
